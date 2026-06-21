@@ -7,6 +7,29 @@ Before adding changes, read:
 - [Data Preservation Policy](docs/data-preservation-policy.md)
 - [Final UAT Checklist](docs/final-uat-checklist.md)
 
+## Docker development environment
+
+The repository includes PHP-FPM, Nginx, MySQL, Redis, queue-worker, and scheduler containers.
+
+1. Copy `.env.example` to `.env` and generate `APP_KEY`.
+2. Optionally copy values from `.env.docker.example` into `.env` and change the local-only database passwords.
+3. Build and start the services:
+
+```bash
+docker compose up -d --build
+docker compose exec app php artisan migrate --seed
+```
+
+The application is available at `http://localhost:8080` by default. MySQL and Redis are exposed on ports `3307` and `6380` to avoid conflicts with common local services.
+
+```bash
+docker compose ps
+docker compose logs -f app nginx queue scheduler
+docker compose down
+```
+
+The GitHub Actions workflow runs the PHPUnit suite, builds the Vite frontend, and verifies both Docker image targets. Deployment is intentionally not automated until a production host and deployment policy are defined.
+
 The original Laravel readme content follows.
 
 <p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
