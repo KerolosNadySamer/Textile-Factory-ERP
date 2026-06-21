@@ -1,19 +1,5 @@
 # syntax=docker/dockerfile:1.7
 
-FROM composer:2 AS vendor
-
-WORKDIR /app
-
-COPY composer.json composer.lock ./
-
-RUN composer install \
-    --no-dev \
-    --no-interaction \
-    --no-progress \
-    --no-scripts \
-    --optimize-autoloader \
-    --prefer-dist
-
 FROM node:20-alpine AS frontend
 
 WORKDIR /app
@@ -27,6 +13,8 @@ COPY postcss.config.js tailwind.config.js vite.config.js ./
 RUN npm run build
 
 FROM php:8.2-fpm-bookworm AS app
+
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
@@ -55,7 +43,16 @@ RUN apt-get update \
 
 WORKDIR /var/www
 
-COPY --from=vendor /app/vendor ./vendor
+COPY composer.json composer.lock ./
+
+RUN composer install \
+    --no-dev \
+    --no-interaction \
+    --no-progress \
+    --no-scripts \
+    --optimize-autoloader \
+    --prefer-dist
+
 COPY . .
 COPY --from=frontend /app/public/build ./public/build
 COPY docker/php/php.ini /usr/local/etc/php/conf.d/textile-erp.ini
